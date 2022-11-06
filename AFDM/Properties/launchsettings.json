@@ -1,0 +1,10 @@
+﻿{
+    "profiles": {
+      "AFDM (Package)": {
+        "commandName": "MsixPackage"
+      },
+      "AFDM (Unpackaged)": {
+        "commandName": "Project"
+      }
+    }
+}

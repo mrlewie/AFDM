@@ -1,0 +1,428 @@
+﻿<Page
+    x:Class="AFDM.Views.MoviesDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:models="using:AFDM.Core.Models"
+    mc:Ignorable="d">
+
+    <Grid x:Name="ContentArea">
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <!--641 is the default CompactModeThresholdWidth in NavigationView -->
+                        <AdaptiveTrigger MinWindowWidth="641" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ActionBarGroup.(RelativePanel.RightOf)" Value="itemHero" />
+                        <!--<Setter Target="propertiesGroup1.(RelativePanel.RightOf)" Value="itemHero" />-->
+                        <!--<Setter Target="propertiesGroup1.(RelativePanel.Below)" Value="MovieTitle" />-->
+                        <!--<Setter Target="propertiesGroup2.(RelativePanel.RightOf)" Value="propertiesGroup1" />-->
+                        <!--<Setter Target="propertiesGroup2.(RelativePanel.Below)" Value="MovieTitle" />-->
+                        <!--<Setter Target="propertiesGroup1.Width" Value="200" />-->
+                        <Setter Target="MovieDetailsGroupA.Width" Value="200" />
+                        <Setter Target="MovieDetailsGroupB.Width" Value="200" />
+                        <Setter Target="MovieDetailsGroupC.Width" Value="200" />
+                        <Setter Target="ActsGroup.Width" Value="600" />
+                        <Setter Target="SynopsisGroup.Width" Value="600" />
+
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <ScrollViewer
+            IsTabStop="True">
+            <StackPanel
+                x:Name="contentPanel">
+                <RelativePanel>
+                    <Grid x:Name="itemHero"
+                          Width="322"
+                          Height="464"
+                          Margin="{StaticResource MediumRightMargin}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Top"
+                          RelativePanel.AlignTopWithPanel="True"
+                          RelativePanel.AlignLeftWithPanel="True">
+                          <controls:ImageEx x:Name="MovieCardCoverImage"
+                                            Width="322"
+                                            Height="464"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="4"
+                                            Stretch="UniformToFill"
+                                            IsCacheEnabled="True"
+                                            Source="{x:Bind ViewModel.Item.FrontCoverImagePath, Mode=OneWay}"
+                                            ui:Effects.Shadow="{StaticResource MoviesCardShadow}" />
+                    </Grid>
+                    <TextBlock x:Name="MovieTitle"
+                               Margin="{StaticResource XXSmallTopMargin}"
+                               RelativePanel.AlignTopWithPanel="True"
+                               RelativePanel.RightOf="itemHero"
+                               Style="{StaticResource MovieCardTitleTextStyle}"
+                               Text="{x:Bind ViewModel.Item.Name, Mode=OneWay}" />
+                    <TextBlock x:Name="MovieYear"
+                               Margin="{StaticResource XSmallTopMargin}"
+                               RelativePanel.AlignTopWithPanel="False"
+                               RelativePanel.RightOf="itemHero"
+                               RelativePanel.Below="MovieTitle"
+                               Style="{StaticResource MovieCardYearTextStyle}"
+                               Text="{x:Bind ViewModel.Item.Year, Mode=OneWay}" />
+                    <!-- rating, metadata badge icons stackpanel-->
+                    <StackPanel x:Name="ActionBarGroup" 
+                                Margin="{StaticResource LargeTopMargin}"
+                                RelativePanel.AlignTopWithPanel="False"
+                                RelativePanel.RightOf="itemHero"
+                                RelativePanel.Below="MovieYear"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                        <Button x:Name="PlayButton"
+                                Width="98"
+                                Height="32">
+                            <Button.Content>
+                                <StackPanel 
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <FontIcon 
+                                        Glyph="&#xf5b0;" 
+                                        FontSize="{StaticResource MovieActionBarIconSize}" />
+                                    <TextBlock 
+                                        Text="PLAY" 
+                                        FontSize="{StaticResource MovieActionBarIconSize}"
+                                        FontWeight="Medium" />
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button x:Name="MarkPlayedButton"
+                                Width="42"
+                                Height="32">
+                            <Button.Content>
+                                <FontIcon 
+                                    Glyph="&#xe930;" 
+                                    FontSize="{StaticResource MovieActionBarIconSize}" />
+                            </Button.Content>
+                        </Button>
+                        <Button x:Name="AddFavouriteButton"
+                                Width="42"
+                                Height="32">
+                            <Button.Content>
+                                <FontIcon 
+                                    Glyph="&#xe734;" 
+                                    FontSize="{StaticResource MovieActionBarIconSize}" />
+                            </Button.Content>
+                        </Button>
+                        <Button x:Name="AddCollectionButton"
+                                Width="42"
+                                Height="32">
+                            <Button.Content>
+                                <FontIcon 
+                                    Glyph="&#xed11;" 
+                                    FontSize="{StaticResource MovieActionBarIconSize}" />
+                            </Button.Content>
+                        </Button>
+                        <Button x:Name="EditButton"
+                                Width="42"
+                                Height="32">
+                            <Button.Content>
+                                <FontIcon 
+                                    Glyph="&#xe70f;" 
+                                    FontSize="{StaticResource MovieActionBarIconSize}" />
+                            </Button.Content>
+                        </Button>
+                        <Button x:Name="MoreButton"
+                                Width="42"
+                                Height="32">
+                            <Button.Content>
+                                <FontIcon 
+                                    Glyph="&#xe712;" 
+                                    FontSize="{StaticResource MovieActionBarIconSize}" />
+                            </Button.Content>
+                        </Button>
+                        <Viewbox
+                            Width="92">
+                            <RatingControl />
+                        </Viewbox>
+                    </StackPanel>
+                    <StackPanel x:Name="MovieDetailsGroupA" 
+                                Margin="{StaticResource LargeTopMargin}"
+                                RelativePanel.AlignTopWithPanel="False"
+                                RelativePanel.RightOf="itemHero"
+                                RelativePanel.Below="ActionBarGroup">
+                        <StackPanel x:Name="DirectorsGroup" Margin="{StaticResource SmallTopMargin}">
+                            <TextBlock Text="Directors" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <!--<TextBlock Text="{x:Bind ViewModel.Item.Directors}" Style="{ThemeResource BodyTextBlockStyle}"  />-->
+                        </StackPanel>
+                        <StackPanel x:Name="StudioGroup" Margin="{StaticResource SmallTopMargin}">
+                            <TextBlock Text="Studio" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind ViewModel.Item.Studio}" Style="{ThemeResource BodyTextBlockStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="MovieDetailsGroupB" 
+                                Margin="{StaticResource LargeTopMargin}"
+                                RelativePanel.AlignTopWithPanel="False"
+                                RelativePanel.RightOf="MovieDetailsGroupA"
+                                RelativePanel.Below="ActionBarGroup">
+                        <StackPanel x:Name="AllGirlGroup" Margin="{StaticResource SmallTopMargin}">
+                            <TextBlock Text="All Girl" Style="{ThemeResource SubtitleTextBlockStyle}"  />
+                            <TextBlock Text="{x:Bind ViewModel.Item.AllGirl}" Style="{ThemeResource BodyTextBlockStyle}"  />
+                        </StackPanel>
+                        <StackPanel x:Name="AllBoyGroup" Margin="{StaticResource SmallTopMargin}">
+                            <TextBlock Text="All Boy" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind ViewModel.Item.AllBoy}" Style="{ThemeResource BodyTextBlockStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="MovieDetailsGroupC" 
+                                Margin="{StaticResource LargeTopMargin}"
+                                RelativePanel.AlignTopWithPanel="False"
+                                RelativePanel.RightOf="MovieDetailsGroupB"
+                                RelativePanel.Below="ActionBarGroup">
+                        <StackPanel x:Name="CompilationGroup" Margin="{StaticResource SmallTopMargin}">
+                            <TextBlock Text="Compilation" Style="{ThemeResource SubtitleTextBlockStyle}"  />
+                            <TextBlock Text="{x:Bind ViewModel.Item.Compilation}" Style="{ThemeResource BodyTextBlockStyle}"  />
+                        </StackPanel>
+                        <StackPanel x:Name="VideoExtension" Margin="{StaticResource SmallTopMargin}">
+                            <TextBlock Text="Extension" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind ViewModel.Item.VideoExtension}" Style="{ThemeResource BodyTextBlockStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="ActsGroup" 
+                                Margin="{StaticResource LargeTopMargin}"
+                                RelativePanel.AlignTopWithPanel="False"
+                                RelativePanel.RightOf="itemHero"
+                                RelativePanel.Below="MovieDetailsGroupA">
+                        <TextBlock 
+                            Text="Acts" 
+                            Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <ItemsRepeater x:Name="ActsContent"                                 
+                                       ItemsSource="{x:Bind ViewModel.Item.Acts}"
+                                       Margin="-10,0,0,0">
+                            <ItemsRepeater.Layout>
+                                <StackLayout 
+                                    Orientation="Horizontal" 
+                                    Spacing="2" />
+                            </ItemsRepeater.Layout>
+                            <DataTemplate x:DataType="models:MovieAct">
+
+                                <HyperlinkButton 
+                                    Content="{x:Bind ShortName, Mode=OneWay}" 
+                                    NavigateUri="www.iafd.com"
+                                    FontSize="14"
+                                    FontWeight="Normal"
+                                    ToolTipService.ToolTip="{x:Bind LongName, Mode=OneWay}">
+                                </HyperlinkButton>
+
+                            </DataTemplate>
+                        </ItemsRepeater>
+                    </StackPanel>
+                    <StackPanel x:Name="SynopsisGroup" 
+                                Margin="{StaticResource LargeTopMargin}"
+                                RelativePanel.AlignTopWithPanel="False"
+                                RelativePanel.RightOf="itemHero"
+                                RelativePanel.Below="ActsGroup">
+                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" 
+                                   MaxHeight="140"
+                                   Text="{x:Bind ViewModel.Item.Synopsis, Mode=OneWay}"/>
+                    </StackPanel>
+                </RelativePanel>
+
+
+                <Expander x:Name="ActorsGroup"
+                          Width="1000"
+                          Margin="{StaticResource MediumTopMargin}"
+                          HorizontalContentAlignment="Left" 
+                          IsExpanded="True">
+                    <Expander.Header>
+                        <TextBlock
+                        Style="{ThemeResource SubtitleTextBlockStyle}"
+                        Text="Actors" />
+                    </Expander.Header>
+                    <Expander.Content>
+                        <ItemsRepeater x:Name="CastContent"
+                                       ItemsSource="{x:Bind ViewModel.Item.Actors, Mode=OneWay}">
+                            
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Horizontal" Spacing="16"/>
+                            </ItemsRepeater.Layout>
+
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="models:MovieActor">
+                                    <StackPanel         
+                                        Spacing="2"
+                                        Background="Transparent">
+                                        <controls:ImageEx x:Name="MovieCardCoverImage"
+                                                        Width="80"
+                                                        Height="80"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        CornerRadius="90"
+                                                        Stretch="UniformToFill"
+                                                        Source="{x:Bind ImagePath, Mode=OneWay}"
+                                                        ui:Effects.Shadow="{StaticResource MovieActorCardShadow}" />
+                                        <TextBlock 
+                                            Width="74"
+                                            HorizontalTextAlignment="Center"
+                                            Text="{x:Bind Name, Mode=OneWay}" 
+                                            Style="{StaticResource ActorsCardNameTextStyle}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </Expander.Content>
+                </Expander>
+
+
+
+
+                <Expander x:Name="ScenesGroup"
+                          Width="1000"
+                          Margin="{StaticResource MediumTopMargin}"
+                          HorizontalContentAlignment="Left" 
+                          IsExpanded="True">
+                    <Expander.Header>
+                    <TextBlock
+                        Style="{ThemeResource SubtitleTextBlockStyle}"
+                        Text="Scenes" />
+                    </Expander.Header>
+                    <Expander.Content>
+                        <StackPanel
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal"
+                            Spacing="28">
+
+                            <ItemsRepeater x:Name="ActorsContent"
+                                           ItemsSource="{x:Bind ViewModel.Item.Scenes, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" Spacing="6"/>
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MovieScene">
+                                        <StackPanel
+                                        Height="50"
+                                        Orientation="Horizontal"
+                                        Spacing="4"
+                                        Background="Transparent">
+                                            <TextBlock 
+                                            Grid.Column="0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Text="Scene"
+                                            FontWeight="Normal" />
+                                            <TextBlock 
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Text="{x:Bind Number, Mode=OneWay}"
+                                            FontWeight="Normal" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                            <ItemsRepeater x:Name="ScenesActorsContent"
+                                       ItemsSource="{x:Bind ViewModel.Item.Scenes, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" Spacing="6"/>
+                                </ItemsRepeater.Layout>
+
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MovieScene">
+                                        <Grid
+                                        MaxWidth="450"
+                                        Height="50"
+                                        Background="Transparent">
+                                            <ItemsRepeater ItemsSource="{x:Bind Actors, Mode=OneWay}">
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Horizontal" Spacing="6"/>
+                                                </ItemsRepeater.Layout>
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate x:DataType="models:MovieActor">
+                                                        <HyperlinkButton
+                                                        Width="50"
+                                                        Height="50"
+                                                        Padding="0"
+                                                        CornerRadius="90">
+                                                            <controls:ImageEx 
+                                                          Width="45"
+                                                          Height="45"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          CornerRadius="90"
+                                                          Stretch="UniformToFill"
+                                                          Source="{x:Bind ImagePath, Mode=OneWay}"
+                                                          ui:Effects.Shadow="{StaticResource MovieActorCardShadow}" />
+                                                        </HyperlinkButton>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                            </ItemsRepeater>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+
+                            <ItemsRepeater x:Name="ScenesActsContent"
+                                       ItemsSource="{x:Bind ViewModel.Item.Scenes, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" Spacing="6"/>
+                                </ItemsRepeater.Layout>
+
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MovieScene">
+                                        <Grid
+                                        MaxWidth="250"
+                                        Height="50"
+                                        Background="Transparent">
+                                            <ItemsRepeater ItemsSource="{x:Bind Acts, Mode=OneWay}">
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Horizontal" Spacing="2"/>
+                                                </ItemsRepeater.Layout>
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate x:DataType="models:MovieAct">
+                                                        <HyperlinkButton
+                                                        Height="22"
+                                                        Padding="0"
+                                                        Content="{x:Bind ShortName, Mode=OneWay}"
+                                                        FontSize="14"
+                                                        CornerRadius="3">
+                                                        </HyperlinkButton>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                            </ItemsRepeater>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </Expander.Content>
+                </Expander>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <TextBlock
+                    Margin="{StaticResource SmallTopMargin}"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    Text="Note 1" />
+                <TextBlock
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    Text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis quis hendrerit nulla, vel molestie libero. In nec ultricies magna, ultricies molestie ipsum. Mauris non dignissim velit. Etiam malesuada blandit mauris eu maximus. Quisque ornare, felis nec scelerisque mollis, risus dolor posuere magna, in gravida quam mi id nisi. Nullam mattis consequat ex. Cras nulla neque, dictum ac urna et, vestibulum feugiat ex. Pellentesque malesuada accumsan ligula, vel fringilla lacus facilisis sit amet. Proin convallis tempor arcu, ac placerat libero pretium ut. Praesent hendrerit nisl at lobortis viverra. Fusce vitae velit odio. Nam ut tortor sed purus finibus sollicitudin quis at ante. Ut sodales dolor vel eros mollis suscipit. Donec eu nulla id urna ultricies consequat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae;" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
