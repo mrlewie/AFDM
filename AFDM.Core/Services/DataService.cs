@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 using AFDM.Core.Contracts.Services;
 using AFDM.Core.Models;
@@ -16,6 +17,7 @@ public class DataService : IDataService
     private readonly string _iafdSearchSingle = @"/title.rme/title={0}/year={1}";
 
     private List<Movie> _allMovies;
+    private List<string> _allActFilters;
 
     public DataService()
     {
@@ -23,9 +25,9 @@ public class DataService : IDataService
 
     private static IEnumerable<Movie> AllMovies()
     {
-        var userMoviesFolderPath = @"G:\Film\Complete";  // TODO: migrate this to a call to local settings
+        var userMoviesFolderPath = @"E:\Film\Complete";  // TODO: migrate this to a call to local settings
 
-        List<Movie> allMovies = new List<Movie>();
+        var allMovies = new List<Movie>();
         if (Directory.Exists(userMoviesFolderPath))
         {
             var movieFolderPaths = Directory.GetDirectories(userMoviesFolderPath);
@@ -59,6 +61,22 @@ public class DataService : IDataService
         return allMovies;
     }
 
+    private IEnumerable<string> AllActFilters()
+    {
+        var allActs = new List<string>();
+        if (_allMovies != null)
+        {
+            allActs = _allMovies.SelectMany(e => e.Acts)
+                                .Select(e => e.ShortName)
+                                .Distinct()
+                                .OrderBy(e => e)
+                                .ToList();
+        }
+
+        return allActs;
+    }
+
+
     public async Task<IEnumerable<Movie>> GetMoviesGridDataAsync()
     {
         if (_allMovies == null)
@@ -69,6 +87,40 @@ public class DataService : IDataService
         await Task.CompletedTask;
         return _allMovies;
     }
+
+    public async Task<IEnumerable<string>> GetMoviesFilterDataAsync()
+    {
+        if (_allMovies != null)
+        {
+            _allActFilters = new List<string>(AllActFilters());  // TODO: testing
+        }
+
+        await Task.CompletedTask;
+        return _allActFilters;
+    }
+
+
+
+    public async Task<IEnumerable<Movie>> GetFilteredMoviesGridDataAsync(string filterLabel, string filterValue)
+    {
+        if (!string.IsNullOrEmpty(filterLabel) && !string.IsNullOrEmpty(filterValue))
+        {
+            //_allMovies = new List<Movie>(AllMovies()); // TODO: use this when we persist data
+            switch (filterLabel)
+            {
+                case "Act":
+                    _allMovies = _allMovies.Where(e => e.Acts.Any(e => e.ShortName == filterValue)).ToList();
+                    break;
+                case "Year":
+                    _allMovies = _allMovies.Where(e => e.Year == filterValue).ToList();
+                    break;
+            }
+        }
+
+        await Task.CompletedTask;
+        return _allMovies;
+    }
+
 
     public async Task<Movie> UpdateMovieViaBestWebMatchAsync(Movie movie)
     {
@@ -323,7 +375,6 @@ public class DataService : IDataService
     #endregion
 
 
-
     #region Helper functions
     // TODO: should this be somewhere else?
     private static List<string> GetImageFiles(string folderPath, bool fullPath)
@@ -375,7 +426,4 @@ public class DataService : IDataService
         return coverImages;
     }
     #endregion
-
-
-
 }

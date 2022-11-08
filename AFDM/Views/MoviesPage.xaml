@@ -31,78 +31,53 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            
+
             <Grid x:Name="SubBarFiltersContainer" 
                   Grid.Column="0"
-                  HorizontalAlignment="Left">
-                <StackPanel Orientation="Horizontal">
-                    
-                    <!-- select changed -->
-                    
-                    <DropDownButton x:Name="SubBarFilterButton"
-                                    Margin="-10,0,0,0"
-                                    BorderThickness="0"
-                                    Background="Transparent"
-                                    ToolTipService.ToolTip="Filter"
-                                    ToolTipService.Placement="Top">
-                        <DropDownButton.Content>
-                            <FontIcon Glyph="&#xE71C;" FontSize="16"/>
-                        </DropDownButton.Content>
+                  HorizontalAlignment="Left" 
+                  VerticalAlignment="Center">
+                <StackPanel 
+                    Orientation="Horizontal" 
+                    Spacing="6">
+                    <FontIcon 
+                        Glyph="&#xe71c;"
+                        FontSize="16" 
+                        VerticalAlignment="Center" />
+                    <TextBlock 
+                        Text="Filter:"
+                        VerticalAlignment="Center" />
+                    <!-- TODO: when msft implements dropdownbutton datatemplate, use that entirely-->
+                    <!-- SelectionChanged -->
+                    <ComboBox x:Name="SubBarFilterType"
+                              Margin="2,0,0,0"
+                              Padding="0"
+                              VerticalAlignment="Center"
+                              BorderThickness="0"
+                              Background="Transparent" />
+                    <TextBlock 
+                        Text="by:"
+                        VerticalAlignment="Center" 
+                        Visibility="Visible" />
+                    <ComboBox x:Name="SubBarFilterValue"
+                              Margin="2,0,0,0"
+                              Padding="0"
+                              VerticalAlignment="Center"
+                              BorderThickness="0"
+                              Background="Transparent"
+                              Visibility="Visible" 
+                              ItemsSource="{x:Bind ViewModel.Filters, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.SelectedFilter, Mode=TwoWay}">
+                    </ComboBox>
                         
-                        <DropDownButton.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
-                                <ToggleMenuFlyoutItem Text="All" IsChecked="True" />
-                                <ToggleMenuFlyoutItem Text="Unplayed" IsChecked="False" />
-                                <ToggleMenuFlyoutItem Text="Unmatched" IsChecked="False" />
-                                <MenuFlyoutSeparator/>
-                                <MenuFlyoutSubItem Text="Act" >
-                                    <!--<ToggleMenuFlyoutItem Text="Anal" 
-                                                          IsChecked="False" 
-                                                          Command="{x:Bind ViewModel.FilterClickCommand }"
-                                                          CommandParameter="{Binding}"/>-->
-                                    
-                                </MenuFlyoutSubItem>
-                            </MenuFlyout>
-                        </DropDownButton.Flyout>
-                    </DropDownButton>
-                   
 
+                    <Button
+                        VerticalAlignment="Center"
+                        Command="{x:Bind ViewModel.ItemFilterCommand, Mode=OneWay}">
+                        
+                        
+                    </Button>
 
-                    <TextBlock x:Name="MoviesFilterLabel"
-                               Margin="0,0,5,0"
-                               Text="Filter by:" 
-                               VerticalAlignment="Center" />
-                    <TextBlock x:Name="MoviesFilteValue"   
-                               Text="Act" 
-                               FontWeight="Medium"
-                               VerticalAlignment="Center"/>
-                    <DropDownButton x:Name="SubBarSortButton"
-                                    Margin="20,0,-8,0"
-                                    BorderThickness="0"
-                                    Background="Transparent"
-                                    ToolTipService.ToolTip="Sort"
-                                    ToolTipService.Placement="Top">
-                        <DropDownButton.Content>
-                            <FontIcon Glyph="&#xE8CB;" FontSize="16"/>
-                        </DropDownButton.Content>
-                        <DropDownButton.Flyout>
-                            <MenuFlyout Placement="RightEdgeAlignedTop">
-                                <MenuFlyoutItem Text="Year" />
-                                <MenuFlyoutItem Text="Studio" />
-                                <MenuFlyoutItem Text="Rating" />
-                            </MenuFlyout>
-                        </DropDownButton.Flyout>
-                    </DropDownButton>
-                    <TextBlock x:Name="MoviesSortLabel"  
-                               Text="Sort by:" 
-                               Margin="0,0,5,0"
-                               VerticalAlignment="Center"/>
-                    <TextBlock x:Name="MoviesSortValue"   
-                               Text="Year" 
-                               FontWeight="Medium"
-                               VerticalAlignment="Center"/>
                 </StackPanel>
-                
             </Grid>
             <Grid x:Name="SubBarOptionsContainer" 
                   Grid.Column="1" 
@@ -116,8 +91,6 @@
                     <Button
                         Content="Refresh All"
                         Command="{x:Bind ViewModel.RefreshAllClickCommand, Mode=OneWay}" />
-
-
 
                     <Slider x:Name="MoviesCardSizeSlider" 
                             Width="125"
@@ -155,7 +128,7 @@
                                    animations:Connected.ListItemElementName="MoviesCardContainer"
                                    animations:Connected.ListItemKey="animationKeyContentGrid"
                                    ItemClickCommand="{x:Bind ViewModel.ItemClickCommand, Mode=OneWay}"
-                                   ItemsSource="{x:Bind ViewModel.Source,Mode=OneWay}"
+                                   ItemsSource="{x:Bind ViewModel.Source, Mode=OneWay}"
                                    IsItemClickEnabled="True"
                                    SelectionMode="None"
                                    StretchContentForSingleRow="False">

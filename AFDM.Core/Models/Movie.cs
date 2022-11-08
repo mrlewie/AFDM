@@ -518,8 +518,6 @@ public class Movie : INotifyPropertyChanged
         }
     }
 
-
-
     public void UpdateViaIAFDResult(MovieResultIAFD result)
     {
         if (result != null)
