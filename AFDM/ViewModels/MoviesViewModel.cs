@@ -28,13 +28,9 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
 {
     private readonly INavigationService _navigationService;
     private readonly IDataService _dataService;
-    private readonly IFileService _fileService;
+    //private readonly IFileService _fileService;
 
     public ICommand ItemClickCommand
-    {
-        get;
-    }
-    public ICommand ItemFilterCommand
     {
         get;
     }
@@ -47,68 +43,82 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         get;
     }
 
-    public ObservableCollection<Movie> Source { get; } = new ObservableCollection<Movie>();
+    public ObservableCollection<Movie> MovieDataAll { get; } = new ObservableCollection<Movie>();
+    public ObservableCollection<Movie> MovieDataFiltered { get; set; }
 
-    public ObservableCollection<string> Filters { get; } = new ObservableCollection<string>();
-    
+    // TODO: bind to view instead of using view method?
     private string selectedFilter;
     public string SelectedFilter
     {
-        get => selectedFilter;
+        get
+        {
+            return selectedFilter;
+        }
         set
         {
             selectedFilter = value;
-            OnItemFilterClick("Act", selectedFilter);   // TODO: hook up label
+            //OnItemFilterClick("Act", selectedFilter);   // TODO: hook up label
         } 
     }
-
 
     public MoviesViewModel(INavigationService navigationService, IDataService dataService, IFileService fileService)
     {
         _navigationService = navigationService;
         _dataService = dataService;
-        _fileService = fileService;
+        //_fileService = fileService;
 
         // IOptions<LocalSettingsOptions> settings add to inputs
         //_settings = settings.Value;  // TODO: implement settings on load
 
         ItemClickCommand = new RelayCommand<Movie>(OnItemClick);
-        //ItemFilterCommand = new RelayCommand(OnItemFilterClick);
         RefreshAllClickCommand = new RelayCommand(OnRefreshAllClick);
         MenuRefreshMetadataClickCommand = new RelayCommand<Movie>(OnMenuRefreshMetadataClick);
     }
 
     public async void OnNavigatedTo(object parameter)
     {
-        if (Source.Count == 0)
+        if (MovieDataAll.Count == 0)
         {
             // Get movies grid data
-            Source.Clear();
+            MovieDataAll.Clear();
             var gridData = await _dataService.GetMoviesGridDataAsync();
             foreach (var item in gridData)
             {
-                Source.Add(item);
+                MovieDataAll.Add(item);
             }
 
-            // Get movies filter data
-            Filters.Clear();
-            var filterData = await _dataService.GetMoviesFilterDataAsync();
-            foreach (var item in filterData)
-            {
-                Filters.Add(item);
-            }
+            // Set filter object to new copy
+            MovieDataFiltered = new ObservableCollection<Movie>(MovieDataAll);
         }
     }
 
-    private async void OnItemFilterClick(string filterLabel, string filterValue)
+    public void OnMovieFilterClick(string filterType, string filterValue)
     {
-        //Source.Clear(); // TODO: use this when we persist data
-        var data = await _dataService.GetFilteredMoviesGridDataAsync(filterLabel, filterValue);
+        MovieDataFiltered.Clear();
+        //MovieDataFiltered = MovieDataAll;
 
-        Source.Clear();
-        foreach (var item in data)
+        var tempDataFiltered = new List<Movie>();
+
+        if (filterType == "General" && filterValue == "All")
         {
-            Source.Add(item);
+            foreach (var item in MovieDataAll)
+            {
+                MovieDataFiltered.Add(item);
+            }
+        }
+        else if (filterType == "General" && filterValue == "Unplayed")
+        {
+            // TODO: reselect whole source data
+        }
+        else if (filterType == "Act")
+        {
+            foreach (var item in MovieDataAll)
+            {
+                if (item.Acts.Select(e => e.ShortName).Contains(filterValue))
+                {
+                    MovieDataFiltered.Add(item);
+                }
+            }
         }
     }
 
@@ -127,36 +137,25 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
 
     private async void OnRefreshAllClick()
     {
-        if (Source.Count > 0 && Source != null)
+        if (MovieDataAll.Count > 0 && MovieDataAll != null)
         {
             var dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
-            try { 
-                ParallelOptions options = new() { MaxDegreeOfParallelism = 4 };
-                await Parallel.ForEachAsync(Source, options, async (item, token) =>
+            ParallelOptions options = new() { MaxDegreeOfParallelism = 4 };
+            await Parallel.ForEachAsync(MovieDataAll, options, async (item, token) =>
+            {
+                try
                 {
                     await dispatcherQueue.EnqueueAsync(async () =>
                     {
-                        item.IsAvailable = false;
                         await _dataService.UpdateMovieViaBestWebMatchAsync(item);
-
-
-                        Filters.Clear();
-                        var filterData = await _dataService.GetMoviesFilterDataAsync();
-                        foreach (var item in filterData)
-                        {
-                            Filters.Add(item);
-                        }
-
-
-                        item.IsAvailable = true;
                     });
-                });
-            }
-            catch (Exception e)
-            {
-                int x = 0;
-            }
+                }
+                catch (Exception e)
+                {
+                    int x = 0;
+                }
+            });
         }
     }
 
@@ -164,22 +163,7 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
     {
         if (clickedItem != null)
         {
-            // Flag clicked item processing
-            clickedItem.IsAvailable = false;
-
-            // Get and update item via IAFD web data
             await _dataService.UpdateMovieViaBestWebMatchAsync(clickedItem);
-
-            // Reset the filter values
-            Filters.Clear();
-            var filterData = await _dataService.GetMoviesFilterDataAsync();
-            foreach (var item in filterData)
-            {
-                Filters.Add(item);
-            }
-
-            // Unflag item as processing
-            clickedItem.IsAvailable = true;
         }
     }
 }

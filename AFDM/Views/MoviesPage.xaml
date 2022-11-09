@@ -39,44 +39,25 @@
                 <StackPanel 
                     Orientation="Horizontal" 
                     Spacing="6">
-                    <FontIcon 
-                        Glyph="&#xe71c;" 
-                        FontSize="16" 
-                        VerticalAlignment="Center" />
-                    <TextBlock 
-                        Text="Filter:"
-                        VerticalAlignment="Center" />
-                    <!-- TODO: when msft implements dropdownbutton datatemplate, use that entirely-->
-                    <!-- SelectionChanged -->
-                    <ComboBox x:Name="SubBarFilterType"
-                              Margin="2,0,0,0"
-                              Padding="0"
-                              VerticalAlignment="Center"
-                              BorderThickness="0"
-                              Background="Transparent" />
-                    <TextBlock 
-                        Text="by:"
-                        VerticalAlignment="Center" 
-                        Visibility="Visible" />
-                    <ComboBox x:Name="SubBarFilterValue"
-                              Margin="2,0,0,0"
-                              Padding="0"
-                              VerticalAlignment="Center"
-                              BorderThickness="0"
-                              Background="Transparent"
-                              Visibility="Visible" 
-                              ItemsSource="{x:Bind ViewModel.Filters, Mode=OneWay}"
-                              SelectedItem="{x:Bind ViewModel.SelectedFilter, Mode=TwoWay}">
-                    </ComboBox>
-                        
 
-                    <Button
-                        VerticalAlignment="Center"
-                        Command="{x:Bind ViewModel.ItemFilterCommand, Mode=OneWay}">
-                        
-                        
-                    </Button>
-
+                    <DropDownButton x:Name="FiltersDropDown">
+                        <DropDownButton.Content>
+                            <FontIcon Glyph="&#xe71c;" FontSize="16"/>
+                        </DropDownButton.Content>
+                        <DropDownButton.Flyout>
+                            <MenuFlyout>
+                                <RadioMenuFlyoutItem Text="All" Click="RadioMenuFlyoutItem_Click" Tag="General"/>
+                                <RadioMenuFlyoutItem Text="Unplayed" Click="RadioMenuFlyoutItem_Click" Tag="General" />
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutSubItem Text="Act">
+                                    <RadioMenuFlyoutItem Text="Anal" Click="RadioMenuFlyoutItem_Click" Tag="Act"/>
+                                    <RadioMenuFlyoutItem Text="DP" Click="RadioMenuFlyoutItem_Click" Tag="Act" />
+                                    <RadioMenuFlyoutItem Text="DPP" Click="RadioMenuFlyoutItem_Click" Tag="Act" />
+                                    <RadioMenuFlyoutItem Text="DAP" Click="RadioMenuFlyoutItem_Click" Tag="Act" />
+                                </MenuFlyoutSubItem>
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
                 </StackPanel>
             </Grid>
             <Grid x:Name="SubBarOptionsContainer" 
@@ -124,14 +105,14 @@
         <Grid x:Name="ContentArea"
               Grid.Row="1">
             <controls:AdaptiveGridView x:Name="ContentAdaptiveGrid"
-                                   Margin="-7,0,0,0"
-                                   animations:Connected.ListItemElementName="MoviesCardContainer"
-                                   animations:Connected.ListItemKey="animationKeyContentGrid"
-                                   ItemClickCommand="{x:Bind ViewModel.ItemClickCommand, Mode=OneWay}"
-                                   ItemsSource="{x:Bind ViewModel.Source, Mode=OneWay}"
-                                   IsItemClickEnabled="True"
-                                   SelectionMode="None"
-                                   StretchContentForSingleRow="False">
+                                       Margin="-7,0,0,0"
+                                       animations:Connected.ListItemElementName="MoviesCardContainer"
+                                       animations:Connected.ListItemKey="animationKeyContentGrid"
+                                       ItemClickCommand="{x:Bind ViewModel.ItemClickCommand, Mode=OneWay}"
+                                       ItemsSource="{x:Bind ViewModel.MovieDataFiltered, Mode=OneWay}"
+                                       IsItemClickEnabled="True"
+                                       SelectionMode="None"
+                                       StretchContentForSingleRow="False">
                 <controls:AdaptiveGridView.ItemTemplate>
                     <DataTemplate x:DataType="models:Movie">
                         <Grid x:Name="MoviesCardContainer"

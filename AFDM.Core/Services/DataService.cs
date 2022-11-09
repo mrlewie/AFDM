@@ -17,7 +17,6 @@ public class DataService : IDataService
     private readonly string _iafdSearchSingle = @"/title.rme/title={0}/year={1}";
 
     private List<Movie> _allMovies;
-    private List<string> _allActFilters;
 
     public DataService()
     {
@@ -61,21 +60,6 @@ public class DataService : IDataService
         return allMovies;
     }
 
-    private IEnumerable<string> AllActFilters()
-    {
-        var allActs = new List<string>();
-        if (_allMovies != null)
-        {
-            allActs = _allMovies.SelectMany(e => e.Acts)
-                                .Select(e => e.ShortName)
-                                .Distinct()
-                                .OrderBy(e => e)
-                                .ToList();
-        }
-
-        return allActs;
-    }
-
 
     public async Task<IEnumerable<Movie>> GetMoviesGridDataAsync()
     {
@@ -87,45 +71,13 @@ public class DataService : IDataService
         await Task.CompletedTask;
         return _allMovies;
     }
-
-    public async Task<IEnumerable<string>> GetMoviesFilterDataAsync()
-    {
-        if (_allMovies != null)
-        {
-            _allActFilters = new List<string>(AllActFilters());  // TODO: testing
-        }
-
-        await Task.CompletedTask;
-        return _allActFilters;
-    }
-
-
-
-    public async Task<IEnumerable<Movie>> GetFilteredMoviesGridDataAsync(string filterLabel, string filterValue)
-    {
-        if (!string.IsNullOrEmpty(filterLabel) && !string.IsNullOrEmpty(filterValue))
-        {
-            //_allMovies = new List<Movie>(AllMovies()); // TODO: use this when we persist data
-            switch (filterLabel)
-            {
-                case "Act":
-                    _allMovies = _allMovies.Where(e => e.Acts.Any(e => e.ShortName == filterValue)).ToList();
-                    break;
-                case "Year":
-                    _allMovies = _allMovies.Where(e => e.Year == filterValue).ToList();
-                    break;
-            }
-        }
-
-        await Task.CompletedTask;
-        return _allMovies;
-    }
-
-
     public async Task<Movie> UpdateMovieViaBestWebMatchAsync(Movie movie)
     {
         if (movie.Name != null)
         {
+            // Set movie to processing
+            movie.IsAvailable = false;
+
             // Fetch all matching movie titles in IAFD database
             var searchResults = await GetMatchingMoviesViaIAFDAsync(movie.Name, movie.Year);
             if (searchResults.Count > 0)
@@ -137,6 +89,9 @@ public class DataService : IDataService
                 // Create new movie and update with new data
                 movie.UpdateViaIAFDResult(iafdResult);
             }
+
+            // Release movie from processing
+            movie.IsAvailable = true;
         }
 
         await Task.CompletedTask;

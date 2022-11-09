@@ -20,6 +20,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using Microsoft.UI.Xaml.Media;
+using System.Reflection;
 
 namespace AFDM.Views;
 
@@ -45,8 +46,15 @@ public sealed partial class MoviesPage : Page
     //    //ViewModel.UpdateCardSize(value);
     //}
 
-    private void ChangeColorItem_Click(object sender, RoutedEventArgs e)
+    private void RadioMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
     {
+        var item = (RadioMenuFlyoutItem)sender;
 
+        var type = item.Tag.ToString();
+        var value = item.Text;
+        if (!string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(value))
+        {
+            ViewModel.OnMovieFilterClick(type, value);
+        }
     }
 }
