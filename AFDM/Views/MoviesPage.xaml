@@ -39,14 +39,13 @@
                 <StackPanel 
                     Orientation="Horizontal" 
                     Spacing="6">
-
                     <DropDownButton x:Name="FiltersDropDown">
                         <DropDownButton.Content>
                             <FontIcon Glyph="&#xe71c;" FontSize="16"/>
                         </DropDownButton.Content>
                         <DropDownButton.Flyout>
-                            <MenuFlyout>
-                                <RadioMenuFlyoutItem Text="All" Click="RadioMenuFlyoutItem_Click" Tag="General"/>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <RadioMenuFlyoutItem Text="All" Click="RadioMenuFlyoutItem_Click" Tag="General" IsChecked="True" />
                                 <RadioMenuFlyoutItem Text="Unplayed" Click="RadioMenuFlyoutItem_Click" Tag="General" />
                                 <MenuFlyoutSeparator/>
                                 <MenuFlyoutSubItem Text="Act">
@@ -58,6 +57,24 @@
                             </MenuFlyout>
                         </DropDownButton.Flyout>
                     </DropDownButton>
+
+                    <DropDownButton x:Name="SortersDropDown">
+                        <DropDownButton.Content>
+                            <FontIcon Glyph="&#xe8cb;" FontSize="16"/>
+                        </DropDownButton.Content>
+                        <DropDownButton.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <RadioMenuFlyoutItem Text="Title" Click="RadioMenuFlyoutItem_Click" GroupName="SortBy"  Tag="Sort" IsChecked="True" />
+                                <RadioMenuFlyoutItem Text="Year" Click="RadioMenuFlyoutItem_Click" GroupName="SortBy" Tag="Sort" />
+                                <RadioMenuFlyoutItem Text="Length" Click="RadioMenuFlyoutItem_Click" GroupName="SortBy" Tag="Sort" />
+                                <RadioMenuFlyoutItem Text="Studio" Click="RadioMenuFlyoutItem_Click" GroupName="SortBy" Tag="Sort" />
+                                <MenuFlyoutSeparator/>
+                                <RadioMenuFlyoutItem Text="Ascending" GroupName="SortByDirection"  Tag="Direction" IsChecked="True" />
+                                <RadioMenuFlyoutItem Text="Descending" GroupName="SortByDirection" Tag="Direction" />
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+
                 </StackPanel>
             </Grid>
             <Grid x:Name="SubBarOptionsContainer" 

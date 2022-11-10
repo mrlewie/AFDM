@@ -39,13 +39,6 @@ public sealed partial class MoviesPage : Page
         this.DataContext = ViewModel;
     }
 
-    //private void MoviesCardSizeSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    //{
-    //    //var slider = sender as Slider;
-    //    //var value = (double)slider.Value;
-    //    //ViewModel.UpdateCardSize(value);
-    //}
-
     private void RadioMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
     {
         var item = (RadioMenuFlyoutItem)sender;
