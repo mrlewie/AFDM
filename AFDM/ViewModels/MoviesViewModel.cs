@@ -1,26 +1,14 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading;
 using System.Windows.Input;
-
 using AFDM.Contracts.Services;
 using AFDM.Contracts.ViewModels;
 using AFDM.Core.Contracts.Services;
 using AFDM.Core.Models;
-using AFDM.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI;
-using Microsoft.Extensions.Options;
 using Microsoft.UI.Dispatching;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Input;
-using Newtonsoft.Json.Linq;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
 
 namespace AFDM.ViewModels;
 
@@ -42,11 +30,19 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
     {
         get;
     }
+    public ICommand ScanMoviesFolderCommand
+    {
+        get;
+    }
+    public ICommand ChangeMovieCardSizeChangeCommand
+    {
+        get;
+    }
 
     public ObservableCollection<Movie> MovieDataAll { get; } = new ObservableCollection<Movie>();
-    public ObservableCollection<Movie> MovieDataFiltered { get; set; }
+    public ObservableCollection<Movie> MovieDataFiltered { get; } = new ObservableCollection<Movie>();
 
-    // TODO: bind to view instead of using view method?
+
     private string selectedFilter;
     public string SelectedFilter
     {
@@ -61,6 +57,21 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         } 
     }
 
+    private double _movieCardWidth = 180; // medium
+    public double MovieCardWidth
+    {
+        get => _movieCardWidth;
+        set => SetProperty(ref _movieCardWidth, value);  // use this to trigger change on view!
+    }
+
+    private double _movieCarHeight = 260; // medium
+    public double MovieCardHeight
+    {
+        get => _movieCarHeight;
+        set => SetProperty(ref _movieCarHeight, value);  // use this to trigger change on view!
+    }
+
+
     public MoviesViewModel(INavigationService navigationService, IDataService dataService, IFileService fileService)
     {
         _navigationService = navigationService;
@@ -73,50 +84,47 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         ItemClickCommand = new RelayCommand<Movie>(OnItemClick);
         RefreshAllClickCommand = new RelayCommand(OnRefreshAllClick);
         MenuRefreshMetadataClickCommand = new RelayCommand<Movie>(OnMenuRefreshMetadataClick);
+        ScanMoviesFolderCommand = new RelayCommand(OnScanFoldersClick);
+        ChangeMovieCardSizeChangeCommand = new RelayCommand<string>(OnMovieCardSizeChanged);
+
     }
 
     public async void OnNavigatedTo(object parameter)
     {
         if (MovieDataAll.Count == 0)
         {
-            // Get movies grid data
             MovieDataAll.Clear();
-            var gridData = await _dataService.GetMoviesGridDataAsync();
-            foreach (var item in gridData)
+            
+            var movies = await _dataService.GetMoviesGridDataAsync();
+            foreach (var movie in movies)
             {
-                MovieDataAll.Add(item);
+                MovieDataAll.Add(movie);
+                MovieDataFiltered.Add(movie);
             }
 
             // Set filter object to new copy
-            MovieDataFiltered = new ObservableCollection<Movie>(MovieDataAll);
+            //MovieDataFiltered = new ObservableCollection<Movie>(MovieDataAll);
         }
     }
 
     public void OnMovieFilterClick(string filterType, string filterValue)
     {
         MovieDataFiltered.Clear();
-        //MovieDataFiltered = MovieDataAll;
-
-        var tempDataFiltered = new List<Movie>();
 
         if (filterType == "General" && filterValue == "All")
         {
-            foreach (var item in MovieDataAll)
+            foreach (var movie in MovieDataAll)
             {
-                MovieDataFiltered.Add(item);
+                MovieDataFiltered.Add(movie);
             }
-        }
-        else if (filterType == "General" && filterValue == "Unplayed")
-        {
-            // TODO: reselect whole source data
         }
         else if (filterType == "Act")
         {
-            foreach (var item in MovieDataAll)
+            foreach (var movie in MovieDataAll)
             {
-                if (item.Acts.Select(e => e.ShortName).Contains(filterValue))
+                if (movie.Acts.Select(e => e.ShortName).Contains(filterValue))
                 {
-                    MovieDataFiltered.Add(item);
+                    MovieDataFiltered.Add(movie);
                 }
             }
         }
@@ -164,6 +172,43 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         if (clickedItem != null)
         {
             await _dataService.UpdateMovieViaBestWebMatchAsync(clickedItem);
+        }
+    }
+
+
+    // TODO: improve this func
+    private async void OnScanFoldersClick()
+    {
+        _dataService.SyncMovieFoldersWithJSONFiles();
+
+        // TODO: improve this by adding only movies not in viewmodel already
+        MovieDataAll.Clear();
+        MovieDataFiltered.Clear();
+
+        var movies = await _dataService.GetMoviesGridDataAsync();
+        foreach (var movie in movies)
+        {
+            MovieDataAll.Add(movie);
+            MovieDataFiltered.Add(movie);
+        }
+    }
+
+    public void OnMovieCardSizeChanged(string? requestedSize)
+    {
+        if (requestedSize == "Small")
+        {
+            MovieCardWidth = 144;
+            MovieCardHeight = 207;
+        }
+        else if (requestedSize == "Medium")
+        {
+            MovieCardWidth = 180;
+            MovieCardHeight = 258;
+        }
+        else if (requestedSize == "Large")
+        {
+            MovieCardWidth = 230;
+            MovieCardHeight = 331;
         }
     }
 }

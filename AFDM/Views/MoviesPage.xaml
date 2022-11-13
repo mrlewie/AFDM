@@ -31,7 +31,6 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-
             <Grid x:Name="SubBarFiltersContainer" 
                   Grid.Column="0"
                   HorizontalAlignment="Left" 
@@ -75,6 +74,10 @@
                         </DropDownButton.Flyout>
                     </DropDownButton>
 
+                    <Button x:Name="Temp"
+                            Content="Scan drive" 
+                            Command="{x:Bind ViewModel.ScanMoviesFolderCommand, Mode=OneWay}"/>
+
                 </StackPanel>
             </Grid>
             <Grid x:Name="SubBarOptionsContainer" 
@@ -90,30 +93,24 @@
                         Content="Refresh All"
                         Command="{x:Bind ViewModel.RefreshAllClickCommand, Mode=OneWay}" />
 
-                    <Slider x:Name="MoviesCardSizeSlider" 
-                            Width="125"
-                            Margin="0,0,10,0"
-                            Minimum="1.0"
-                            Maximum="1.6" 
-                            StepFrequency="0.1" 
-                            IsThumbToolTipEnabled="False" 
-                            VerticalAlignment="Center"/>
-                    <DropDownButton x:Name="MoviesCardSizeButton"
-                                    BorderThickness="0"
-                                    Background="Transparent"
-                                    ToolTipService.ToolTip="Sort"
-                                    ToolTipService.Placement="Top">
+                    <DropDownButton x:Name="MoviesCardSizeDropDownButton">
                         <DropDownButton.Content>
-                            <FontIcon Glyph="&#xF0E2;" FontSize="16"/>
+                            <FontIcon Glyph="&#xf0e2;" FontSize="16"/>
                         </DropDownButton.Content>
                         <DropDownButton.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                <MenuFlyoutItem Text="Grid View" />
-                                <MenuFlyoutItem Text="List View" />
-                                <MenuFlyoutItem Text="Table View" />
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <RadioMenuFlyoutItem Text="Grid" GroupName="ViewType" Tag="ViewType" IsChecked="True" />
+                                <RadioMenuFlyoutItem Text="List" GroupName="ViewType" Tag="ViewType" />
+                                <RadioMenuFlyoutItem Text="Table" GroupName="ViewType" Tag="ViewType" />
+                                <MenuFlyoutSeparator/>
+                                <RadioMenuFlyoutItem Text="Large" Click="SizeMenuFlyoutItem_Click" GroupName="ViewSize" Tag="ViewSize" />
+                                <RadioMenuFlyoutItem Text="Medium" Click="SizeMenuFlyoutItem_Click" GroupName="ViewSize" Tag="ViewSize" IsChecked="True" />
+                                <RadioMenuFlyoutItem Text="Small" Click="SizeMenuFlyoutItem_Click" GroupName="ViewSize" Tag="ViewSize" />
                             </MenuFlyout>
                         </DropDownButton.Flyout>
                     </DropDownButton>
+
+
                 </StackPanel>
             </Grid>
         </Grid>
@@ -122,95 +119,87 @@
         <Grid x:Name="ContentArea"
               Grid.Row="1">
             <controls:AdaptiveGridView x:Name="ContentAdaptiveGrid"
-                                       Margin="-7,0,0,0"
-                                       animations:Connected.ListItemElementName="MoviesCardContainer"
-                                       animations:Connected.ListItemKey="animationKeyContentGrid"
-                                       ItemClickCommand="{x:Bind ViewModel.ItemClickCommand, Mode=OneWay}"
+                                       Margin="-8,0,0,0"
+                                       DesiredWidth="{x:Bind ViewModel.MovieCardWidth, Mode=TwoWay}"
                                        ItemsSource="{x:Bind ViewModel.MovieDataFiltered, Mode=OneWay}"
-                                       IsItemClickEnabled="True"
+                                       ItemClickCommand="{x:Bind ViewModel.ItemClickCommand, Mode=OneWay}"
+                                       IsItemClickEnabled="False"
                                        SelectionMode="None"
-                                       StretchContentForSingleRow="False">
+                                       StretchContentForSingleRow="False"
+                                       OneRowModeEnabled="False"
+                                       animations:Connected.ListItemElementName="MoviesCardStackContainer"
+                                       animations:Connected.ListItemKey="animationKeyContentGrid">
                 <controls:AdaptiveGridView.ItemTemplate>
                     <DataTemplate x:DataType="models:Movie">
-                        <Grid x:Name="MoviesCardContainer"
-                          Margin="{StaticResource MoviesCardMargin}"
-                          Padding="{StaticResource MoviesCardPadding}">
-                            <StackPanel x:Name="MoviesCardContainerStacker"
-                                        Width="{Binding ElementName=MoviesCardSizeSlider, 
-                                                        Path=Value, 
-                                                        Mode=OneWay, 
-                                                        Converter={StaticResource MultiplyConverter}, 
-                                                        ConverterParameter=144}" 
-                                    HorizontalAlignment="Center" 
-                                    VerticalAlignment="Center">
-                                <Grid x:Name="MoviesCardImageContainer">
-                                    
-                                    <controls:ImageEx x:Name="MoviesCardImage"
-                                                  Height="{Binding ElementName=MoviesCardSizeSlider, 
-                                                                   Path=Value, 
-                                                                   Mode=OneWay, 
-                                                                   Converter={StaticResource MultiplyConverter}, 
-                                                                   ConverterParameter=207}" 
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  CornerRadius="4"
-                                                  Stretch="UniformToFill"
-                                                  EnableLazyLoading="False"
-                                                  LazyLoadingThreshold="750"
-                                                  IsCacheEnabled="True"
-                                                  Source="{x:Bind FrontCoverImagePath, Mode=OneWay}"
-                                                  ui:Effects.Shadow="{StaticResource MoviesCardShadow}" 
-                                                  Opacity="{x:Bind IsAvailable, 
-                                                                   Mode=OneWay, 
-                                                                   Converter={StaticResource IsProcessingBoolToDoubleConverter}}" />
+                        <StackPanel x:Name="MoviesCardStackContainer"
+                                    Margin="10,5,10,25">
+                            <Grid>
+                                <Viewbox>
+                                    <HyperlinkButton 
+                                        Margin="0"
+                                        Padding="0"
+                                        CornerRadius="4"
+                                        Command="{Binding ElementName=ContentArea, Path=DataContext.ItemClickCommand, Mode=OneWay}" 
+                                        CommandParameter="{Binding}">
 
-                                    <ProgressRing x:Name="MoviesCardImageProgressor"
+                                        <!-- TODO: improve caching, slows down after full screen whether using old or new-->
+                                        <controls:ImageEx x:Name="MoviesCardImage"
+                                                          Width="{Binding ElementName=ContentArea, Path=DataContext.MovieCardWidth, Mode=TwoWay}"
+                                                          Height="{Binding ElementName=ContentArea, Path=DataContext.MovieCardHeight, Mode=TwoWay}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          CornerRadius="4"
+                                                          Stretch="UniformToFill"
+                                                          EnableLazyLoading="False"
+                                                          LazyLoadingThreshold="250"
+                                                          IsCacheEnabled="True"
+                                                          Source="{x:Bind FrontCoverImagePath, Mode=OneWay}" 
+                                                          Opacity="{x:Bind IsAvailable, Mode=OneWay, 
+                                                                           Converter={StaticResource IsProcessingBoolToDoubleConverter}}" />
+                                    </HyperlinkButton>
+                                </Viewbox>
+                                <ProgressRing x:Name="MoviesCardImageProgressor"
                                               Width="42"
                                               Height="42"
-                                              IsActive="{x:Bind IsAvailable, Mode=OneWay, Converter={StaticResource NegBoolConverter}}" />
-                                </Grid>
-                                <TextBlock x:Name="MoviesCardTitle"
-                                       Text="{x:Bind Name, Mode=OneWay}"
-                                       Margin="{StaticResource MoviesCardTitleTopMargin}"
-                                       HorizontalAlignment="Left"
-                                       Style="{ThemeResource MoviesCardTitleTextStyle}" />
-                                <TextBlock x:Name="MoviesCardYear"
+                                              IsActive="{x:Bind IsAvailable, Mode=OneWay, 
+                                                         Converter={StaticResource NegBoolConverter}}" />
+                            </Grid>
+                            <TextBlock x:Name="MoviesCardTitle"
+                                    Text="{x:Bind Name, Mode=OneWay}"
+                                    Margin="{StaticResource MoviesCardTitleTopMargin}"
+                                    HorizontalAlignment="Left"
+                                    Style="{ThemeResource MoviesCardTitleTextStyle}" />
+                            <TextBlock x:Name="MoviesCardYear"
                                        Text="{x:Bind Year, Mode=OneWay}"
                                        Margin="{StaticResource MoviesCardYearTopMargin}"
                                        HorizontalAlignment="Left"
                                        Style="{ThemeResource MoviesCardYearTextStyle}" />
 
-                                <!-- margin negative is temp for testing -->
-                                <Button x:Name="MovieCardOptionsButton"
+                            <!-- margin negative is temp for testing -->
+                            <Button x:Name="MovieCardOptionsButton"
                                     Margin="0,-18,0,0"
                                     HorizontalAlignment="Right">
-                                    <FontIcon 
+                                <FontIcon 
                                     Glyph="&#xE712;" 
                                     FontSize= "10"/>
-                                    <Button.Flyout>
-                                        <MenuFlyout>
-                                            <MenuFlyoutItem Text="Play" 
+                                <Button.Flyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Play" 
                                                         Icon="Play" />
-                                            <MenuFlyoutSeparator/>
-                                            <MenuFlyoutItem Text="Refresh Metadata" 
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem Text="Refresh Metadata" 
                                                         Icon="Refresh" 
-                                                        Command="{Binding ElementName=ContentArea, Path=DataContext.MenuRefreshMetadataClickCommand, Mode=OneWay }"
+                                                        Command="{Binding ElementName=ContentArea, Path=DataContext.MenuRefreshMetadataClickCommand, Mode=OneWay}"
                                                         CommandParameter="{Binding}" />
-                                            <MenuFlyoutItem Text="Delete" 
+                                        <MenuFlyoutItem Text="Delete" 
                                                         Icon="Delete" />
-                                        </MenuFlyout>
-                                    </Button.Flyout>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                            </Button>
+                        </StackPanel>
                     </DataTemplate>
                 </controls:AdaptiveGridView.ItemTemplate>
             </controls:AdaptiveGridView>
         </Grid>
-
-
     </Grid>
-    
-
-    
 </Page>

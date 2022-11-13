@@ -1,76 +1,56 @@
-﻿using System.Linq;
+﻿using System.Collections;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using AFDM.Core.Contracts.Services;
 using AFDM.Core.Models;
 using F23.StringSimilarity;
 using HtmlAgilityPack;
-
+using Microsoft.VisualBasic;
+using Newtonsoft.Json.Linq;
 using static System.Net.WebRequestMethods;
 
 namespace AFDM.Core.Services;
 
 public class DataService : IDataService
 {
+    private readonly IFileService _fileService;
+
+    private readonly string _appMoviesFolder = @"C:\Users\Lewis\source\repos\AFDM\AFDM\Data\Movies\";  // TODO: use local app folder
+    private readonly string _userMoviesFolder = @"E:\Film\Complete";                                   // TODO: migrate this to a call to local settings
     private readonly string _iafdRoot = "https://www.iafd.com";
     private readonly string _iafdSearchMany = @"/results.asp?searchtype=comprehensive&searchstring={0}";
     private readonly string _iafdSearchSingle = @"/title.rme/title={0}/year={1}";
 
     private List<Movie> _allMovies;
 
-    public DataService()
+    public DataService(IFileService fileService)
     {
+        _fileService = fileService;
     }
 
-    private static IEnumerable<Movie> AllMovies()
-    {
-        var userMoviesFolderPath = @"E:\Film\Complete";  // TODO: migrate this to a call to local settings
-
-        var allMovies = new List<Movie>();
-        if (Directory.Exists(userMoviesFolderPath))
-        {
-            var movieFolderPaths = Directory.GetDirectories(userMoviesFolderPath);
-            foreach (var movieFolderPath in movieFolderPaths)
-            {
-                var movieFolderName = new DirectoryInfo(movieFolderPath).Name;
-
-                var movieID = Guid.NewGuid().ToString("N");
-                var folderParts = movieFolderName.Split('(', ')');
-                var movieName = folderParts[0].Trim();
-                var movieYear = folderParts.Length > 1 ? folderParts[1].Trim() : null;
-
-                var movieImages = GetImageFiles(movieFolderPath, true);
-                var movieCovers = GetCoverImageFiles(movieImages);
-                var movieFrontCover = movieCovers.GetValueOrDefault("FrontCover");
-                var movieBackCover = movieCovers.GetValueOrDefault("BackCover");
-
-                allMovies.Add(new Movie()
-                {
-                    ID = movieID,
-                    Folder = movieFolderName,
-                    Name = movieName,
-                    Year = movieYear,
-                    FrontCoverImagePath = movieFrontCover,
-                    BackCoverImagePath = movieBackCover,
-                    IsAvailable = true
-                });
-            }
-        }
-
-        return allMovies;
-    }
-
-
+    #region Get data functions
     public async Task<IEnumerable<Movie>> GetMoviesGridDataAsync()
     {
         if (_allMovies == null)
         {
-            _allMovies = new List<Movie>(AllMovies());
+            _allMovies = new List<Movie>(GetAllMoviesFromJsonFolder());
+        }
+
+        // TODO: add this as allMovies is not null after rescan, so gri ddoesnt update until app restart
+        if (_allMovies.Count == 0)
+        {
+            _allMovies = new List<Movie>(GetAllMoviesFromJsonFolder());
         }
 
         await Task.CompletedTask;
         return _allMovies;
     }
+    #endregion
+
+    #region Web functions
     public async Task<Movie> UpdateMovieViaBestWebMatchAsync(Movie movie)
     {
         if (movie.Name != null)
@@ -92,13 +72,14 @@ public class DataService : IDataService
 
             // Release movie from processing
             movie.IsAvailable = true;
+
+            // Overwrite json file
+            _fileService.Save(_appMoviesFolder, movie.ID + ".json", movie);
         }
 
         await Task.CompletedTask;
         return movie;
     }
-
-    #region Web functions
     private async Task<List<SearchResultIAFD>> GetMatchingMoviesViaIAFDAsync(string movieName, string movieYear)
     {
         var results = new List<SearchResultIAFD>();
@@ -152,7 +133,6 @@ public class DataService : IDataService
         await Task.CompletedTask;
         return results;
     }
-
     private async Task<MovieResultIAFD> GetSpecificMovieViaIAFDAsync(string movieName, string movieYear)
     {
         var result = new MovieResultIAFD();
@@ -329,9 +309,95 @@ public class DataService : IDataService
     }
     #endregion
 
+    #region Local file functions
+    public void SyncMovieFoldersWithJSONFiles()
+    {
+        // Get all existing movies from json files
+        var jsonMovies = GetAllMoviesFromJsonFolder();
 
-    #region Helper functions
-    // TODO: should this be somewhere else?
+        // Get all existing movies from user folders and files
+        var userMovies = GetAllMoviesFromUserFolder();
+
+        // Compare json and user movies and if no json of it, add it
+        var existingJsonIDs = jsonMovies.Select(e => e.ID).ToList();
+        foreach (var userMovie in userMovies)
+        {
+            if (!existingJsonIDs.Contains(userMovie.ID))
+            {
+                _fileService.Save(_appMoviesFolder, userMovie.ID + ".json", userMovie);
+            }
+        }
+
+        // Compare json and user movies and if json of it but no user folder, remove it
+        var existingUserIDs = userMovies.Select(e => e.ID).ToList();
+        foreach (var jsonMovie in jsonMovies)
+        {
+            if (!existingUserIDs.Contains(jsonMovie.ID))
+            {
+                _fileService.Delete(_appMoviesFolder, jsonMovie.ID + ".json");
+            }
+        }
+    }  // TODO: hook up with viewmodel scan
+    private IEnumerable<Movie> GetAllMoviesFromJsonFolder()
+    {
+        // Get all existing movies from json files ordered by name
+        var jsonMovies = new List<Movie>();
+        if (Directory.Exists(_appMoviesFolder))
+        {
+            var jsonMovieFiles = Directory.GetFiles(_appMoviesFolder);
+            foreach (var jsonMovieFile in jsonMovieFiles)
+            {
+                jsonMovies.Add(_fileService.Read<Movie>(_appMoviesFolder, jsonMovieFile));
+            }
+        }
+
+        return jsonMovies.OrderBy(e => e.Name).ToList();
+    }
+    private IEnumerable<Movie> GetAllMoviesFromUserFolder()
+    {
+        // Build all existing movies from user folders and files
+        var userMovies = new List<Movie>();
+        if (Directory.Exists(_userMoviesFolder))
+        {
+            var userMovieFolders = Directory.GetDirectories(_userMoviesFolder);
+            foreach (var userMovieFolder in userMovieFolders)
+            {
+                var folderName = new DirectoryInfo(userMovieFolder).Name;
+
+                string movieID;
+                using (var hash = SHA256.Create())
+                {
+                    var bytes = hash.ComputeHash(Encoding.UTF8.GetBytes(folderName));
+                    movieID = Convert.ToHexString(bytes);
+                }
+
+                var parts = folderName.Split('(', ')');
+                var movieName = parts[0].Trim();
+                var movieYear = parts.Length > 1 ? parts[1].Trim() : null;
+
+                var movieImages = GetImageFiles(userMovieFolder, true);
+                var movieCovers = GetCoverImageFiles(movieImages);
+                var movieFrontCover = movieCovers.GetValueOrDefault("FrontCover");
+                var movieBackCover = movieCovers.GetValueOrDefault("BackCover");
+
+                userMovies.Add(new Movie()
+                {
+                    ID = movieID,
+                    Folder = folderName,
+                    Name = movieName,
+                    Year = movieYear,
+                    FrontCoverImagePath = movieFrontCover,
+                    BackCoverImagePath = movieBackCover,
+                    IsAvailable = true
+                });
+            }
+        }
+
+        return userMovies;
+    }
+    #endregion
+
+    #region Helper functions (TODO: move elsewhere?)
     private static List<string> GetImageFiles(string folderPath, bool fullPath)
 {
     var imageFiles = new List<string>();
@@ -351,8 +417,6 @@ public class DataService : IDataService
 
     return imageFiles;
 }
-
-    // TODO: should this be somewhere else?
     private static Dictionary<string, string> GetCoverImageFiles(List<string> imageFiles)
     {
         var coverImages = new Dictionary<string, string>();

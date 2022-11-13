@@ -50,4 +50,19 @@ public sealed partial class MoviesPage : Page
             ViewModel.OnMovieFilterClick(type, value);
         }
     }
+
+    private void SizeMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+    {
+        var item = (RadioMenuFlyoutItem)sender;
+        
+        var type = item.Tag.ToString();
+        var value = item.Text;
+        if (!string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(value))
+        {
+            if (type == "ViewSize")
+            {
+                ViewModel.OnMovieCardSizeChanged(value);
+            }
+        }
+    }
 }
