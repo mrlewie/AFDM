@@ -48,6 +48,7 @@ public sealed partial class MoviesPage : Page
         if (!string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(value))
         {
             ViewModel.OnMovieFilterClick(type, value);
+
         }
     }
 
