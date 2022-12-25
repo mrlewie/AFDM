@@ -39,7 +39,7 @@ public class DataService : IDataService
             _allMovies = new List<Movie>(GetAllMoviesFromJsonFolder());
         }
 
-        // TODO: add this as allMovies is not null after rescan, so gri ddoesnt update until app restart
+        // TODO: add this as allMovies is not null after rescan, so grid doesnt update until app restart
         if (_allMovies.Count == 0)
         {
             _allMovies = new List<Movie>(GetAllMoviesFromJsonFolder());
@@ -80,7 +80,7 @@ public class DataService : IDataService
         await Task.CompletedTask;
         return movie;
     }
-    private async Task<List<SearchResultIAFD>> GetMatchingMoviesViaIAFDAsync(string movieName, string movieYear)
+    public async Task<List<SearchResultIAFD>> GetMatchingMoviesViaIAFDAsync(string movieName, string movieYear)
     {
         var results = new List<SearchResultIAFD>();
         if (!string.IsNullOrEmpty(movieName))
@@ -133,7 +133,7 @@ public class DataService : IDataService
         await Task.CompletedTask;
         return results;
     }
-    private async Task<MovieResultIAFD> GetSpecificMovieViaIAFDAsync(string movieName, string movieYear)
+    public async Task<MovieResultIAFD> GetSpecificMovieViaIAFDAsync(string movieName, string movieYear)
     {
         var result = new MovieResultIAFD();
 
@@ -151,6 +151,9 @@ public class DataService : IDataService
                 // Extract movie namd and year
                 result.Name = heading.InnerText.Split('(', ')')[0].Trim();
                 result.Year = heading.InnerText.Split('(', ')')[1].Trim();
+
+                // Extract url
+                result.Url = url;
 
                 // Extract movie details (e.g., directors, studio, etc.)
                 var bioElems = doc.DocumentNode.SelectNodes("//p[@class='bioheading']");

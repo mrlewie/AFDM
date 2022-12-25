@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Xml.Linq;
 using AFDM.Contracts.Services;
 using AFDM.Contracts.ViewModels;
 using AFDM.Core.Contracts.Services;
@@ -39,22 +40,21 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         get;
     }
 
+    //public ICommand FixMatchItemClickCommand
+    //{
+        //get;
+    //}
+
     public ObservableCollection<Movie> MovieDataAll { get; } = new ObservableCollection<Movie>();
     public ObservableCollection<Movie> MovieDataFiltered { get; } = new ObservableCollection<Movie>();
+    public ObservableCollection<SearchResultIAFD> UserFixMatchIAFDSearchResults { get; set; } = new ObservableCollection<SearchResultIAFD>();
 
 
-    private string selectedFilter;
-    public string SelectedFilter
+    private string? _selectedFilter;
+    public string? SelectedFilter
     {
-        get
-        {
-            return selectedFilter;
-        }
-        set
-        {
-            selectedFilter = value;
-            //OnItemFilterClick("Act", selectedFilter);   // TODO: hook up label
-        } 
+        get => _selectedFilter;
+        set => _selectedFilter = value;
     }
 
     private double _movieCardWidth = 180; // medium
@@ -64,12 +64,28 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         set => SetProperty(ref _movieCardWidth, value);  // use this to trigger change on view!
     }
 
-    private double _movieCarHeight = 260; // medium
+    private double _movieCardHeight = 260; // medium
     public double MovieCardHeight
     {
-        get => _movieCarHeight;
-        set => SetProperty(ref _movieCarHeight, value);  // use this to trigger change on view!
+        get => _movieCardHeight;
+        set => SetProperty(ref _movieCardHeight, value);  // use this to trigger change on view!
     }
+
+
+    private string? _userMovieTitleQuery;
+    public string? UserMovieTitleQuery
+    {
+        get => _userMovieTitleQuery;
+        set => SetProperty(ref _userMovieTitleQuery, value);  // use this to trigger change on view!
+    }
+
+    private string? _userMovieYearQuery;
+    public string? UserMovieYearQuery
+    {
+        get => _userMovieYearQuery;
+        set => SetProperty(ref _userMovieYearQuery, value);  // use this to trigger change on view!
+    }
+
 
 
     public MoviesViewModel(INavigationService navigationService, IDataService dataService, IFileService fileService)
@@ -86,6 +102,7 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         MenuRefreshMetadataClickCommand = new RelayCommand<Movie>(OnMenuRefreshMetadataClick);
         ScanMoviesFolderCommand = new RelayCommand(OnScanFoldersClick);
         ChangeMovieCardSizeChangeCommand = new RelayCommand<string>(OnMovieCardSizeChanged);
+        //FixMatchItemClickCommand = new RelayCommand<SearchResultIAFD>(OnFixMatchItemClick);
 
     }
 
@@ -209,6 +226,53 @@ public class MoviesViewModel : ObservableRecipient, INavigationAware
         {
             MovieCardWidth = 230;
             MovieCardHeight = 331;
+        }
+    }
+
+    public async void OnFixMatchItemClick(Movie? clickedMovie, SearchResultIAFD? clickedSearchResult)
+    {
+        if (clickedMovie != null && clickedSearchResult != null)
+        {
+            clickedMovie.IsAvailable = false;
+
+            var movieResult = await _dataService.GetSpecificMovieViaIAFDAsync(clickedSearchResult.Name, clickedSearchResult.Year);
+            clickedMovie.UpdateViaIAFDResult(movieResult);
+
+            clickedMovie.IsAvailable = true;
+        }
+    }
+
+
+    public async void OnUserMovieQuery()
+    {
+        UserFixMatchIAFDSearchResults.Clear();
+
+        if (!string.IsNullOrEmpty(UserMovieTitleQuery) && string.IsNullOrEmpty(UserMovieYearQuery))
+        {
+            var movies = await _dataService.GetMatchingMoviesViaIAFDAsync(UserMovieTitleQuery, null);
+            
+            foreach (var movie in movies)
+            {
+                var searchResult = new SearchResultIAFD()
+                {
+                    Name = movie.Name,
+                    Year = movie.Year,
+                    Url  = movie.Url
+                };
+                UserFixMatchIAFDSearchResults.Add(searchResult);
+            }
+        }
+        else if (!string.IsNullOrEmpty(UserMovieTitleQuery) && !string.IsNullOrEmpty(UserMovieYearQuery))
+        {
+            var movie = await _dataService.GetSpecificMovieViaIAFDAsync(UserMovieTitleQuery, UserMovieYearQuery);
+            
+            var searchResult = new SearchResultIAFD()
+            {
+                Name = movie.Name,
+                Year = movie.Year,
+                Url  = movie.Url
+            };
+            UserFixMatchIAFDSearchResults.Add(searchResult);
         }
     }
 }

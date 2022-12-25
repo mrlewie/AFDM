@@ -150,8 +150,8 @@
                                                           VerticalAlignment="Center"
                                                           CornerRadius="4"
                                                           Stretch="UniformToFill"
-                                                          EnableLazyLoading="False"
-                                                          LazyLoadingThreshold="250"
+                                                          EnableLazyLoading="True"
+                                                          LazyLoadingThreshold="200"
                                                           IsCacheEnabled="True"
                                                           Source="{x:Bind FrontCoverImagePath, Mode=OneWay}" 
                                                           Opacity="{x:Bind IsAvailable, Mode=OneWay, 
@@ -184,15 +184,17 @@
                                     FontSize= "10"/>
                                 <Button.Flyout>
                                     <MenuFlyout>
-                                        <MenuFlyoutItem Text="Play" 
-                                                        Icon="Play" />
+                                        <MenuFlyoutItem Text="Play" Icon="Play" />
                                         <MenuFlyoutSeparator/>
                                         <MenuFlyoutItem Text="Refresh Metadata" 
                                                         Icon="Refresh" 
                                                         Command="{Binding ElementName=ContentArea, Path=DataContext.MenuRefreshMetadataClickCommand, Mode=OneWay}"
                                                         CommandParameter="{Binding}" />
-                                        <MenuFlyoutItem Text="Delete" 
-                                                        Icon="Delete" />
+                                        <MenuFlyoutItem Text="Fix Match" 
+                                                        Icon="Refresh" 
+                                                        Click="ShowTermsOfUseContentDialogButton_Click" 
+                                                        CommandParameter="{Binding ElementName=ContentArea}"/>
+                                        <MenuFlyoutItem Text="Delete" Icon="Delete" />
                                     </MenuFlyout>
                                 </Button.Flyout>
                             </Button>
@@ -201,5 +203,72 @@
                 </controls:AdaptiveGridView.ItemTemplate>
             </controls:AdaptiveGridView>
         </Grid>
+
+
+        <ContentDialog x:Name="termsOfUseContentDialog"
+                       PrimaryButtonText="Search"
+                       IsPrimaryButtonEnabled="True"
+                       PrimaryButtonClick="termsOfUseContentDialog_PrimaryButtonClick"
+                       CloseButtonText="Cancel"
+                       CloseButtonClick="termsOfUseContentDialog_CloseButtonClick"
+                       Opened="TermsOfUseContentDialog_Opened"
+                       Closing="TermsOfUseContentDialog_Closing">
+            <ContentDialog.TitleTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Vertical" Spacing="4">
+                        <TextBlock Text="Fix Match"/>
+                        <TextBlock Text="Location of movie:" FontSize="14" FontWeight="Normal"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ContentDialog.TitleTemplate>
+            
+            <StackPanel Orientation="Vertical" Spacing="14">
+                <TextBox x:Name="UserMovieTitleQuery"   
+                            Width="450"
+                            Header="Title:" 
+                            Text="{Binding ElementName=ContentArea, Path=DataContext.UserMovieTitleQuery, Mode=TwoWay}"/>
+                <TextBox x:Name="UserMovieYearQuery"  
+                            Width="450"
+                            Header="Year:" 
+                            Text="{Binding ElementName=ContentArea, Path=DataContext.UserMovieYearQuery, Mode=TwoWay}"/>
+                <ListView 
+                    Width="450"
+                    Height="300"
+                    IsItemClickEnabled="True"
+                    ItemsSource="{x:Bind ViewModel.UserFixMatchIAFDSearchResults, Mode=OneWay}"
+                    ItemClick="ListView_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:SearchResultIAFD">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="40" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" HorizontalAlignment="Left" Text="{x:Bind Name, Mode=OneWay}" />
+                                <TextBlock Grid.Column="1" HorizontalAlignment="Right" Text="{x:Bind Year, Mode=OneWay}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+
+                <!--"{Binding ElementName=ContentArea, Path=DataContext.MenuRefreshMetadataClickCommand, Mode=OneWay}"
+                                                        CommandParameter="{Binding}"-->
+
+
+            </StackPanel>
+
+
+
+            <!--<StackPanel>
+
+                <TextBlock TextWrapping="WrapWholeWords">Hello!</TextBlock>
+                <CheckBox x:Name="ConfirmAgeCheckBox" 
+                          Content="I am over 13 years of age."
+                          Checked="ConfirmAgeCheckBox_Checked" 
+                          Unchecked="ConfirmAgeCheckBox_Unchecked"/>
+            </StackPanel>-->
+        </ContentDialog>
+
     </Grid>
 </Page>

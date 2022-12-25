@@ -26,6 +26,8 @@ public class MovieResultIAFD
 
     public string Year {  get; set; }
 
+    public string Url { get; set; }
+
     public string Minutes { get; set; }
 
     public List<string> Directors { get; set; } = new();
